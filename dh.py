@@ -59,7 +59,7 @@ def lock():
 
     for i in range(5, -1, -1):
         print(i)
-        if(i > 3):
+        if(i > 2):
             pwm.ChangeDutyCycle(LOCK_POS_DUTY_CYCLE)
         else:
             pwm.ChangeDutyCycle(NEUTRAL_POS_DUTY_CYCLE)
@@ -69,7 +69,7 @@ def lock():
                 pass
             else:
                 touchphat.led_off(i + 1)
-        time.sleep(0.3)
+        time.sleep(0.15)
     
     pwm.ChangeDutyCycle(0)
     
@@ -90,7 +90,7 @@ def unlock():
 
     for i in range(6):
         print(i)
-        if(i < 3):
+        if(i < 4):
             pwm.ChangeDutyCycle(UNLOCK_POS_DUTY_CYCLE)
         else:
             pwm.ChangeDutyCycle(NEUTRAL_POS_DUTY_CYCLE)
@@ -100,7 +100,7 @@ def unlock():
                 pass
             else:
                 touchphat.led_off(i - 1)
-        time.sleep(0.3)
+        time.sleep(0.15)
     
     pwm.ChangeDutyCycle(0)
     
