@@ -21,7 +21,7 @@ autoModeLeds = (2, 3)
 RELAY_PIN = 23
 
 SERVO_PIN = 18
-LOCK_POS_DUTY_CYCLE = 11.0
+LOCK_POS_DUTY_CYCLE = 10.0
 UNLOCK_POS_DUTY_CYCLE = 5.5
 #-------------------------------#
 
