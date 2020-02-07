@@ -14,15 +14,16 @@ bt_addrs = {
     "Christian's iPhone":"E4:E4:AB:3D:3A:4A"
 }
 
-updateSec = 0.5
-lockTimeoutSec = 3.0
+UPDATE_SEC = 0.5
+LOCK_TIMEOUT_SEC = 3.0
 
-lockedLeds = (0, 1)
-unlockedLeds = (5, 4)
-autoModeLeds = (2, 3)
+LOCKED_LEDS = (0, 1)
+UNLOCKED_LEDS = (5, 4)
+AUTO_MODE_LEDS = (2, 3)
 
 RELAY_PIN = 23
 SERVO_PIN = 18
+MOVEMENT_TIME_SEC = 1.0
 LOCK_POS_DUTY_CYCLE = 10.0
 UNLOCK_POS_DUTY_CYCLE = 5.5
 #-------------------------------#
@@ -45,14 +46,15 @@ def updateLights():
     global present
     global autoModeEnabled
 
-    for i in lockedLeds:
+    for i in LOCKED_LEDS:
         touchphat.set_led(i, locked)
-    for i in unlockedLeds:
+    for i in UNLOCKED_LEDS:
         touchphat.set_led(i, not locked)
-    for i in autoModeLeds:
+    for i in AUTO_MODE_LEDS:
         touchphat.set_led(i, autoModeEnabled)
 
 def lock():
+    global MOVEMENT_TIME_SEC
     global pwm
     global locked
     global moving
@@ -69,10 +71,10 @@ def lock():
             pwm.ChangeDutyCycle(0)
         elif(i == 1):
             GPIO.output(RELAY_PIN, False)
-        time.sleep(0.16)
+        time.sleep(MOVEMENT_TIME_SEC / 6.0)
         touchphat.led_on(i)
         if(i > 0 and i < 5):
-            if(autoModeEnabled and i + 1 in autoModeLeds):
+            if(autoModeEnabled and i + 1 in AUTO_MODE_LEDS):
                 pass
             else:
                 touchphat.led_off(i + 1)
@@ -83,6 +85,7 @@ def lock():
     moving = False
 
 def unlock():
+    global MOVEMENT_TIME_SEC
     global pwm
     global locked
     global moving
@@ -99,10 +102,10 @@ def unlock():
             pwm.ChangeDutyCycle(0)
         elif(i == 4):
             GPIO.output(RELAY_PIN, False)
-        time.sleep(0.16)
+        time.sleep(MOVEMENT_TIME_SEC / 6.0)
         touchphat.led_on(i)
         if(i > 0 and i < 5):
-            if(autoModeEnabled and i - 1 in autoModeLeds):
+            if(autoModeEnabled and i - 1 in AUTO_MODE_LEDS):
                 pass
             else:
                 touchphat.led_off(i - 1)
@@ -138,20 +141,20 @@ def handle_button_press(button_id):
     global autoModeEnabled
     global pressed
     print("Button " + str(button_id) + " pressed")
-    if(button_id in unlockedLeds):
+    if(button_id in UNLOCKED_LEDS):
         if(autoModeEnabled):
             setAutoMode(False)
         if(locked):
             unlock()
-    elif(button_id in lockedLeds):
+    elif(button_id in LOCKED_LEDS):
         if(autoModeEnabled):
             setAutoMode(False)
         if(not locked):
             lock()
-    elif(button_id in autoModeLeds):
+    elif(button_id in AUTO_MODE_LEDS):
         #Only execute auto mode toggling if no other buttons are being pressed simultaneously
         anyAutoLedPressed = False
-        for i in autoModeLeds:
+        for i in AUTO_MODE_LEDS:
             if(pressed[i]):
                 anyAutoLedPressed = True
                 break
@@ -198,8 +201,8 @@ def doorHandler(bt_addrs):
     global present_last
     global kill
     global pwm
-    global updateSec
-    global lockTimeoutSec
+    global UPDATE_SEC
+    global LOCK_TIMEOUT_SEC
     global lockTimeoutActive
     global lockTimer
 
@@ -234,15 +237,15 @@ def doorHandler(bt_addrs):
                     if(present):
                         lockTimeoutActive = False
                         lockTimer = 0
-                    elif(not locked and lockTimer >= lockTimeoutSec):
+                    elif(not locked and lockTimer >= LOCK_TIMEOUT_SEC):
                         lock()
                         lockTimer = 0
                         lockTimeoutActive = False
             
             present_last = present
-            time.sleep(updateSec)
-            if(autoModeEnabled and lockTimeoutActive and lockTimer < lockTimeoutSec):
-                lockTimer += updateSec
+            time.sleep(UPDATE_SEC)
+            if(autoModeEnabled and lockTimeoutActive and lockTimer < LOCK_TIMEOUT_SEC):
+                lockTimer += UPDATE_SEC
         except KeyboardInterrupt:
             print("Turning LEDs off")
             touchphat.all_off()
