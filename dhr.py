@@ -69,7 +69,7 @@ def lock():
             pwm.ChangeDutyCycle(0)
         elif(i == 1):
             GPIO.output(RELAY_PIN, False)
-        time.sleep(0.2)
+        time.sleep(0.16)
         touchphat.led_on(i)
         if(i > 0 and i < 5):
             if(autoModeEnabled and i + 1 in autoModeLeds):
@@ -99,7 +99,7 @@ def unlock():
             pwm.ChangeDutyCycle(0)
         elif(i == 4):
             GPIO.output(RELAY_PIN, False)
-        time.sleep(0.2)
+        time.sleep(0.16)
         touchphat.led_on(i)
         if(i > 0 and i < 5):
             if(autoModeEnabled and i - 1 in autoModeLeds):
