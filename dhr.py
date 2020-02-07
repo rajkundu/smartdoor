@@ -14,12 +14,14 @@ bt_addrs = {
     "Christian's iPhone":"E4:E4:AB:3D:3A:4A"
 }
 
+updateSec = 0.5
+lockTimeoutSec = 3.0
+
 lockedLeds = (0, 1)
 unlockedLeds = (5, 4)
 autoModeLeds = (2, 3)
 
 RELAY_PIN = 23
-
 SERVO_PIN = 18
 LOCK_POS_DUTY_CYCLE = 10.0
 UNLOCK_POS_DUTY_CYCLE = 5.5
@@ -35,6 +37,8 @@ pressed = [False, False, False, False, False, False]
 present = False
 present_last = False
 pwm = None
+lockTimeoutActive = False
+lockTimer = 0
 
 def updateLights():
     global locked
@@ -113,6 +117,10 @@ def setAutoMode(val):
     global present
     autoModeEnabled = val
     if(autoModeEnabled):
+        #Disable lock timer
+        lockTimeoutActive = False
+        lockTimer = 0
+        #Lock door based on presence
         if(present and locked):
             unlock()
         elif(not present and not locked):
@@ -187,6 +195,10 @@ def doorHandler(bt_addrs):
     global present_last
     global kill
     global pwm
+    global updateSec
+    global lockTimeoutSec
+    global lockTimeoutActive
+    global lockTimer
 
     i = 0
     for deviceName in bt_addrs.keys():
@@ -212,10 +224,22 @@ def doorHandler(bt_addrs):
                 if(locked and present and not present_last):
                     unlock()
                 elif(not locked and not present and present_last):
-                    lock()
+                    lockTimeoutActive = True
+                    lockTimer = 0
+                
+                if(lockTimeoutActive):
+                    if(present):
+                        lockTimeoutActive = False
+                        lockTimer = 0
+                    else if(not locked and lockTimer >= lockTimeoutSec):
+                        lock()
+                        lockTimer = 0
+                        lockTimeoutActive = False
             
             present_last = present
-            time.sleep(0.5)
+            time.sleep(updateSec)
+            if(autoModeEnabled and lockTimeoutActive and lockTimer < lockTimeoutSec):
+                lockTimer += updateSec
         except KeyboardInterrupt:
             print("Turning LEDs off")
             touchphat.all_off()
