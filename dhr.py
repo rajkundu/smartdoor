@@ -231,7 +231,7 @@ def doorHandler(bt_addrs):
                     if(present):
                         lockTimeoutActive = False
                         lockTimer = 0
-                    else if(not locked and lockTimer >= lockTimeoutSec):
+                    elif(not locked and lockTimer >= lockTimeoutSec):
                         lock()
                         lockTimer = 0
                         lockTimeoutActive = False
