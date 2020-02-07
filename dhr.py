@@ -115,6 +115,8 @@ def unlock():
 def setAutoMode(val):
     global autoModeEnabled
     global present
+    global lockTimeoutActive
+    global lockTimer
     autoModeEnabled = val
     if(autoModeEnabled):
         #Disable lock timer
@@ -124,7 +126,8 @@ def setAutoMode(val):
         if(present and locked):
             unlock()
         elif(not present and not locked):
-            lock()
+            lockTimeoutActive = True
+            lockTimer = 0
         print("AUTO MODE ENABLED")
     else:
         print("AUTO MODE DISABLED")
