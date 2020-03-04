@@ -172,9 +172,6 @@ def handle_side_touch(event):
 
 @touchphat.on_release([0, 1, 2, 3, 4, 5])
 def handle_side_touch(event):
-    global moving
-    if(moving):
-        return
     global pressed
     pressed[event.channel] = False
 
