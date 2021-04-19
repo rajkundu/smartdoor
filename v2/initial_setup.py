@@ -1,8 +1,9 @@
 import os
 from twilio.rest import Client
-from config import ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE_NO, AUTH_CONVERSATION_NAME, TWILIO_PHONE_NAME, AUTH_CONVERSATION_PARTICIPANTS
+import config
+import subprocess
 
-client = Client(ACCOUNT_SID, AUTH_TOKEN)
+client = Client(config.ACCOUNT_SID, config.AUTH_TOKEN)
 
 conversation_list = client.conversations.conversations.list()
 OUTPUT_DIV = "=" * 40
@@ -16,7 +17,7 @@ for c in client.conversations.conversations.list():
             if "address" in key:
                 address_key = key
         participant_numbers.add(p.messaging_binding[address_key])
-    if(c.unique_name == AUTH_CONVERSATION_NAME or participant_numbers == set(list(AUTH_CONVERSATION_PARTICIPANTS.keys()) + [TWILIO_PHONE_NO])):
+    if(c.unique_name == config.AUTH_CONVERSATION_NAME or participant_numbers == set(list(config.AUTH_CONVERSATION_PARTICIPANTS.keys()) + [config.TWILIO_PHONE_NO])):
         print(OUTPUT_DIV)
         print()
         print(f"Found existing conversation:\nSID: '{c.sid}'\nUnique name: '{c.unique_name}'\nFriendly name: '{c.friendly_name}'")
@@ -24,21 +25,23 @@ for c in client.conversations.conversations.list():
         c.delete()
 
 # Create conversation
-conversation = client.conversations.conversations.create(friendly_name=AUTH_CONVERSATION_NAME, unique_name=AUTH_CONVERSATION_NAME)
+conversation = client.conversations.conversations.create(friendly_name=config.AUTH_CONVERSATION_NAME, unique_name=config.AUTH_CONVERSATION_NAME)
 print(OUTPUT_DIV)
 print()
 print(f"Created new conversation:\nSID: '{conversation.sid}'\nUnique name: '{conversation.unique_name}'\nFriendly name: '{conversation.friendly_name}'")
 print()
 
 # Add participants - first Twilio user, then regular SMS users
-conversation.participants.create(identity=TWILIO_PHONE_NAME, messaging_binding_projected_address=TWILIO_PHONE_NO)
-for number in AUTH_CONVERSATION_PARTICIPANTS.keys():
+conversation.participants.create(identity=config.TWILIO_PHONE_NAME, messaging_binding_projected_address=config.TWILIO_PHONE_NO)
+print(f"Added {config.TWILIO_PHONE_NAME} ({config.TWILIO_PHONE_NO}) to conversation.")
+print()
+for number in config.AUTH_CONVERSATION_PARTICIPANTS.keys():
     conversation.participants.create(messaging_binding_address=number)
-    print(f"Added {AUTH_CONVERSATION_PARTICIPANTS[number]} ({number}) to conversation.")
+    print(f"Added {config.AUTH_CONVERSATION_PARTICIPANTS[number]} ({number}) to conversation.")
 print()
 
 # Send test message
-conversation.messages.create(author=TWILIO_PHONE_NAME, body=f"The authentication conversation '{AUTH_CONVERSATION_NAME}' has been set up successfully.")
+conversation.messages.create(author=config.TWILIO_PHONE_NAME, body=f"The authentication conversation '{config.AUTH_CONVERSATION_NAME}' has been set up successfully.")
 print(OUTPUT_DIV)
 print()
 print("Sucessfully set up authentication conversation.")
