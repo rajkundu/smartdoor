@@ -3,59 +3,44 @@ from twilio.rest import Client
 from flask import Flask, request
 import config
 import subprocess
+import json
 from pathlib import Path
 SCRIPT_PARENT_DIR = Path(__file__).parent.absolute()
+HANDLER_DATA_JSON = SCRIPT_PARENT_DIR / "handler_data.json"
 
 client = Client(config.ACCOUNT_SID, config.AUTH_TOKEN)
 
 app = Flask(__name__)
 
-@app.route(config.WEBHOOK_DIR, methods=['POST'])
-def sms_reply():
-    """Send a dynamic reply to an incoming text message"""
+@app.route("/", methods=['POST'])
+def handler():
+    """Handle conversation webhook triggers"""
     print(request.values)
     
+    author = request.values.get("Author", None)
     body = request.values.get("Body", None)
     sid = request.values.get("ConversationSid", None)
     conversation = client.conversations.conversations(sid).fetch()
 
+    # Read in user JSON
+
     if(conversation.unique_name == config.AUTH_CONVERSATION_NAME):
         print("This was sent in the auth group chat")
     elif(len(conversation.participants.list()) == 1):
+        print(author)
         pass
 
     return str()
 
 if __name__ == "__main__":
-    # Connect to ngrok
-    result = subprocess.run(["bash", str(SCRIPT_PARENT_DIR / "ngrok_start.sh")], stdout=subprocess.PIPE)
-    if(result.returncode != 0):
-        print(f"Return code: {result.returncode}")
-        try:
-            stderr = result.stderr.decode('utf-8')
-            print("STDERR:")
-            print(stderr)
-        except:
-            pass
-        try:
-            stdout = result.stdout.decode('utf-8')
-            print("STDOUT:")
-            print(stdout)
-        except:
-            pass
-    # Parse output data of shell script into dictionary
-    output_data = dict()
-    outputlines = result.stdout.decode('utf-8').rstrip().split("\n")
-    for line in outputlines:
-        line_data = line.split("=")
-        output_data[line_data[0]] = line_data[1]
+    # Start vortex
+    vortex_process = subprocess.Popen(["vortex", "-s", config.WEBHOOK_URL.split("://")[1], "--host", "127.0.0.1", "--port", str(config.WEBHOOK_PORT), "--provider", "http"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    vortex_process.stdin.write(str(str(config.VORTEX_PIN) + "\n").encode())
+    vortex_process.stdin.close()
     
-    # Get ngrok url
-    ngrok_url = "https://" + output_data["NGROK_URL"]
-    handler_port = output_data["HANDLER_PORT"]
-    print()
-    print(f"ngrok url: {ngrok_url}")
-    print(f"port: {handler_port}")
-    print()
-    webhook = client.conversations.configuration.webhooks().update(pre_webhook_url="", post_webhook_url=ngrok_url, method='POST', filters=['onMessageAdded'])
-    app.run(port=handler_port, debug=False)
+    print("====================")
+    print(f"url: {config.WEBHOOK_URL}")
+    print(f"port: {config.WEBHOOK_PORT}")
+    print("====================")
+
+    app.run(port=config.WEBHOOK_PORT, debug=False)

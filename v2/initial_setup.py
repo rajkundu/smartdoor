@@ -8,6 +8,9 @@ client = Client(config.ACCOUNT_SID, config.AUTH_TOKEN)
 conversation_list = client.conversations.conversations.list()
 OUTPUT_DIV = "=" * 40
 
+# Set Twilio webhook URL
+webhook = client.conversations.configuration.webhooks().update(pre_webhook_url="", post_webhook_url=(config.WEBHOOK_URL + config.WEBHOOK_DIR), method='POST', filters=['onMessageAdded'])
+
 # Delete conversation if it already exists (e.g. if it was created by users, it must be recreated by Twilio/this script to be used properly)
 for c in client.conversations.conversations.list():
     participant_numbers = set()
